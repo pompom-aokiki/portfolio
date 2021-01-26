@@ -1,0 +1,104 @@
+version: '3'
+
+services:
+  web:
+    build: ./api
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    volumes:
+      - ./api:/app
+      - bundle:/usr/local/bundle
+    tty: true
+    stdin_open: true
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+  db:
+    image: mysql:5.7
+    volumes:
+      - mysql_data:/var/lib/mysql/
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306:3306'
+  front:
+    build: ./front
+    volumes:
+      - ./front:/app
+      - node_modules:/app/node_modules
+    ports:
+      - '8080:8080'
+    tty: true
+    stdin_open: true
+    command: npm run serve
+
+  # localstack
+  localstack:
+     image: localstack
+     environment:
+       - SERVICES=s3
+       - DEFAULT_REGION=ap-northeast-1
+       - DATA_DIR=/tmp/localstack
+     restart: always
+     ports:
+       - "9000:8080" #dashbord
+       - "4567-4584:4567-4584"
+
+  redis:
+    container_name: "sample.redis.local"
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ~/.sample/docker/data/redis:/data
+    command: redis-server --appendonly yes
+    restart: always
+    networks:
+      app_net:
+  redis-c1:
+    container_name: "sample.redis-c1.local"
+    build: redis-cluster/cluster1
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 172.16.239.11
+  redis-c2:
+    container_name: "sample.redis-c2.local"
+    build: redis-cluster/cluster2
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 172.16.239.12
+  redis-c3:
+    container_name: "sample.redis-c3.local"
+    build: redis-cluster/cluster3
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    restart: always
+    networks:
+      app_net:
+        ipv4_address: 172.16.239.13
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.239.0/24
+          gateway: 172.16.239.1
+
+volumes:
+  mysql_data:
+  bundle:
+  node_modules:
