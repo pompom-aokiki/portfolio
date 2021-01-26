@@ -38,7 +38,7 @@ services:
 
   # localstack
   localstack:
-     image: localstack
+     image: localstack/localstack:latest
      environment:
        - SERVICES=s3
        - DEFAULT_REGION=ap-northeast-1
