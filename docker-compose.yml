@@ -45,7 +45,7 @@ services:
        - DATA_DIR=/tmp/localstack
      restart: always
      ports:
-       - "9000:8080" #dashbord
+       - "9000:9000" #dashbord
        - "4567-4584:4567-4584"
 
   redis:
